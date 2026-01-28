@@ -1,0 +1,816 @@
+---
+output:
+  bookdown::word_document2:
+    fig_caption: yes
+    reference_docx: bootstrap/data/reportTemplate.docx
+  officedown::rdocx_document:
+    reference_docx: bootstrap/data/reportTemplate.docx
+tags: [ICES HKE.27.3a46-8abd WGBIE 2023]
+---
+
+```{r, knitr, echo=FALSE, message=FALSE, warning=FALSE}
+library(knitr)
+opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE,
+  fig.width=5, fig.height=3, fig.pos='!hbt')
+
+# To print the inline numbers using normal notation and not scientific notation.
+options(scipen=999)
+
+library(officedown)
+library(officer)
+```
+
+```{r pkgs}
+library(icesTAF)
+library(icesAdvice)
+library(flextable)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+
+source(file.path(taf.boot.path("software"), "utilities.R"))
+
+ac <- as.character
+```
+```{r funs}
+# Function for formatting numbers in the report
+numf <- function(x) {
+  
+  n   <- nchar(x)
+  
+  lo <- floor(n/3)
+  r  <- n - lo*3
+  
+  if (r==0) {out <- c()} else {out <- substr(x, 1, r)}
+  
+  for (k in 1:lo)
+    out <- c( out, substr(x, 3*k+(r-2), 3*k+r))
+  
+  out <- paste(out, collapse = " ")
+  
+  return(out)
+  
+}
+```
+
+```{r data}
+# load("output/aap.RData", verbose=FALSE)
+# load("output/tables.RData", verbose=FALSE)
+finalrun <- "wg25_def" # name of the final run in the cluster folder
+  
+run <- '_final'
+
+dtyr <- 2024
+
+npy <- dtyr-1     # previous
+py  <- ac(npy)
+ndy <- dtyr
+dy  <- ac(ndy)    # data
+iy  <- ac(dtyr+1) # intermediate
+fy  <- ac(dtyr+2) # forecast
+sy  <- ac(dtyr+3) # ssb
+
+# fmsy_old <- 0.26
+#! to be read from file
+fmsy     <- 0.243
+
+iyTab <- read.csv(file.path("model","sum_advice","table_intermediate_year_icesRound.csv"))
+coptTab <- read.csv(file.path("model","sum_advice","catchoptiontable_final_ICESround.csv"))
+fsq      <- as.numeric(iyTab[paste0("F",iy)])
+
+adv_dy   <- 72839                   #! needs update
+adv_iy   <- 52466; advL_iy <- 48036 #! needs update
+adv_fy   <- 54912; advL_fy <- 49774 #! needs update
+
+tac_dy <- 72839 #! needs update
+tac_iy <- 52466 #! needs update
+tac_dist <- rep(NA, 5)
+
+load(file.path("report","wg_report",paste0('tables', run, '.RData')))
+
+refpts <- list()
+# refpts$Flim     <- 0.734
+refpts$Fpa      <- 0.537
+refpts$Bpa      <- 78405
+refpts$Btrigger <- 78405
+refpts$Blim     <- 61563
+refpts$Fmsy     <- fmsy
+refpts$lFmsy    <- 0.147
+refpts$uFmsy    <- 0.37
+
+```
+
+
+# Sec1
+# Sec2
+# Sec3
+# Sec4
+# Sec5
+# Sec6
+# Sec7
+# Sec8
+
+#	Hake in Greater North Sea, Celtic Seas, and the Bay of Biscay (Northern stock)
+
+hke.27.3a46-8abd^[ICES Stock Information Database. Copenhagen, Denmark. https://sid.ices.dk/ViewStock.aspx?key=3203]  – Merluccius merluccius in subareas 4, 6, and 7, and in divisions 3.a, 8.a-b, and 8.d
+
+**Type of assessment in `r iy`**: update. Stock benchmarked in 2022 during WKANGHAKE (ICES, 2023b), stock on observation list. 
+
+**Data revisions**: no. 
+
+**Review Group issues**: no issues identified.
+
+## General
+
+### 	Stock definition and ecosystem aspects
+
+A detailed description of this subsection is available at the Stock Annex which was updated after the WKANGHAKE benchmark (ICES, 2023b).
+
+###	Fishery description
+
+A general description of the fishery is presented in the Stock Annex. 
+
+
+###	Summary of ICES advice for `r iy` and historical management
+
+
+#### ICES advice for `r iy`
+
+The stock was considered to be above any potential MSY $B_{trigger}$. Following the ICES MSY framework for a category 1 stock (ICES, 2023a) implies that fishing mortality (F) should be maintained at `r icesRound(fmsy)`, resulting in landings of `r numf(advL_iy)` t and total catches of `r numf(adv_iy)` t in `r iy`. 
+
+Like the other EU main fish stocks, northern hake is managed by a TAC and quotas (EU, 2023). The annual TACs (in tonnes) for recent years are presented in the table below. The TAC corresponds to northern stock (subareas 4, 6, and 7, and in divisions 3.a, 8.a–b, and 8.d),  plus division 2.a (EU zone only; since 2021 onwards UK only), and divisions 3.b–d (except for 2019 onwards). There is no agreed TAC for Norwegian waters of subarea 4. 
+<!-- In `r iy`, there has not been an agreement to set an annual TAC. -->
+
+```{r}
+yrs <- 2013:iy
+tacadv <- read.csv( file.path(taf.boot.path("data"),"advice_tac.csv"))
+
+tacTab <- matrix(c(# HKE/03A.
+                   2093,	 2466,	2738,	 2997,	 3371,	 3136,	 4286,	 3403,  2974,  2379, 
+                   2490,   2182,  1746,
+                   # HKE/2AC4-C
+                   2438,	 2874,	3190,	 3492,	 3928,	 3653,	 4994, 	 3940,  3443,  2754, 
+                   2883,   2526,  2021, 
+                   # HKE/571214
+                   38938,	45896, 50944,	61902,	67658,	62536,	79762,	63325, 55335, 44268, 
+                   46335, 40599, 32479, 
+                   # HKE/8ABDE
+                   25970,	30610, 33977,	40393,	44808,	42460,	52118,	42235, 36906, 29525, 
+                   31422, 27532, 22026,
+                   # Total NORTH
+                   69440,	81846, 90849,	108784,	119765,	111785,	141160,	112903, 98658, 78926, 
+                   83130, 72839, 58272), 
+                   5, length(yrs), byrow = TRUE, 
+                  dimnames = list(`TAC (t)` = c('3.a, 3.b,c-d (EC Zone)', '2.a (EC Zone), 4', 
+                                                '5.b (EC Zone), 6, 7', '8.a-b,d-e', 'Total northern Stock'), 
+                                  yrs))  #! TO BE INCLUDED in bootstrap/initial/data/advice_tac.csv               
+	
+out <- data.frame(cbind(tacTab,  tac_dist))
+for(j in 1:(ncol(tacTab)+1)) out[,j] <- as.character(out[,j])
+names(out) <- yrs
+out <- out[,(dim(out)[2]-7):(dim(out)[2]-1)]
+
+out <- out %>% rownames_to_column(var = 'TAC (tonnes)') %>% flextable() %>% fontsize(size = 7, part = 'all') 
+#out <- line_spacing(out,  space = 0.5, part = "body")
+out <- width(out, 1, width = 1)
+out <- width(out, 2:8, width = 0.5)
+out
+```
+
+
+#### Historical management
+
+The minimum legal sizes for fish caught in subareas 4, 6, 7 and 8 is set at 27 cm total length (30 cm in division 3.a) since 1998 (EU Council Regulation (CR) no 850/98 [EU, 1998]). 
+
+In the 14th of June 2001, an Emergency Plan was implemented by the Commission for the recovery of the northern hake stock (Council Regulations N°1162/2001 [EU, 2001a], 2602/2001 [EU, 2001b] and 494/2002 [EU, 2002]). In addition to the TAC reduction, two technical measures were implemented. First, a 100 mm minimum mesh size was implemented for otter-trawlers when hake comprises more than 20% of the total amount of marine organisms retained onboard. However, this measure did not apply to vessels less than 12 m in length and which return to port within 24 hours of their most recent departure. Furthermore, a 100 mm minimum mesh size is required for all otter-trawlers fishing in subareas 7 and 8, whatever the amount of hake caught.
+
+In 2004, explicit management objectives for the recovery of this stock were implemented under the EC CR No. 811/2004 (EU, 2004). It was aimed at increasing the quantities of mature fish to values equal to or greater than 140 000 t (the $B_{pa}$ value at that time). This could be achieved by limiting F to 0.25 and by allowing a maximum change of 15% in TAC between years. According to the ICES advice for 2012, due to the new perspective of historical stock trends resulting from the new assessment method, the previously defined precautionary reference points were no longer appropriate. In particular, the absolute levels of spawning biomass, fishing mortality, and recruitment shifted to different scales. As a consequence, the TAC corresponding to the recovery plan (EC CR No. 811/2004 [EU, 2004], repealed by EC CR No. 2019/472  [EU, 2019]) should no longer be considered, because the plan used target values based on precautionary reference points that were no longer appropriate.
+
+```{r}
+adv_2021 <- tacadv %>% filter(year == 2021) %>% .$advice
+adv_2022 <- tacadv %>% filter(year == 2022) %>% .$advice
+adv_2024 <- tacadv %>% filter(year == 2024) %>% .$advice
+adv_2025 <- tacadv %>% filter(year == 2025) %>% .$advice
+tac_2022 <- tacadv %>% filter(year == 2022) %>% .$tac
+tac_2023 <- tacadv %>% filter(year == 2023) %>% .$tac
+tac_2024 <- tacadv %>% filter(year == 2024) %>% .$tac
+tac_2025 <- tacadv %>% filter(year == 2025) %>% .$tac
+```
+
+The yearly TACs from 2016 to 2019 were slightly below the corresponding ICES advised catch (Figure \@ref(fig:fcatch)). The difference was due to the way the Scientific, Technical and Economic Committee for Fisheries (STECF) calculated the TAC adjustments for stocks subject to the landing obligation (STECF, 2016). In 2021, according to the MSY framework, ICES proposed a decrease in the 2022 catch advice of a `r round((1-adv_2022/adv_2021)*100)`% from `r numf(adv_2021)` t to `r numf(adv_2022)` t. The agreed TAC limited the interannual variability to 20% reduction (TAC = `r numf(tac_2022)` t). In 2023 and 2024, the agreed TACs were set to the ICES advised catch (`r numf(tac_2023)` t, respectively), which implied a `r round(((tac_2023/tac_2022)-1)*100)`% increase in 2023 and a `r round((1-tac_2024/tac_2023)*100)`% decrease in 2024, relative to the previous year TACs. In 2025, the agreed TAC variability was again limited to 20% (TAC = `r numf(tac_2025)` t), instead of the `r round((1-adv_2025/adv_2024)*100)`% reduction advised.
+
+
+
+## Data ##
+### Commercial catches and discards ###
+Total landings from the northern hake stock by area for the period `r paste(1961,dy, sep = "-")`, as used by this working group (WGBIE), are given in Table \@ref(tab:catches). They include landings from subareas 4, 6, and 7, and from divisions 3.a, 8.a–b, and 8.d, as reported to ICES. Unallocated landings are also included in Table \@ref(tab:catches), showing higher values over the first decade (1961-1970), when the uncertainties in the fisheries statistics were also high. In the years 2011 and 2012, they increased again due to the differences between official statistics and scientific estimations. In 2014 and 2015, the differences between scientific and official landings decreased significantly which produced a significant decrease in unallocated landings. The 2016 unallocated landings were reported by area (ICES, 2016). In 2017, no unallocated landings were reported (Table \@ref(tab:sampling)). Table 1 of the Stock Annex provides a historical perspective of the aggregation level at which landings have been available to WGBIE.
+
+Except for 1995, landings decreased steadily from 59 100 t in 1989 to 31 900 t in 1998. Up to 2003, landings fluctuated at around 40 000 t. Since then, with the exception of 2006, landings have been increasing up to 107 500 t in 2016, the highest in the whole time-series. The landings from 2009 to 2015 and the catches in 2016 were above the TAC advice. Since 2016, the catches have decreased every year and they have been below both, the TAC and the catch advice.
+
+Below minimum size landings (BMS) are included in Table \@ref(tab:catches) along with the rest of the landings, with different representativeness along the years, with values ranging between 0 and 82 t (Table \@ref(tab:BMSland)) and mainly reported by The Netherlands (in 2015 and 2016), Spain (in 2019-2021), Sweeden (2021) and UK (2019, 2021-2024). Next year these BMS landings will be included with the discards, as agreed by ICES as the standard procedure for all the stocks. However, the values are very small, and consequently this is not expected to have any impact on the assessment.
+
+The discards had an increasing trend until 2011 and decreased steadily since 2016. The increase was general to all the fleets. In the case of gillnetters, discarding did not occur before 2012 and since then they have had a high level of discards. In 2016, the discards increased for all the fleets except for Spanish trawlers. In 2017, the total discards decreased for all the fleets, except for the Spanish trawlers in division 8.a-b and 8.d, with an overall decrease of 36%. The increase in the Spanish trawlers was equal to 28%.  In 2018, the discards increased in Spanish trawlers in area 7 and in the gillnetters fleet but decreased in all the rest of the fleets. In the following years the discards follow this decreasing trend.
+
+Discards data sampling and availability are presented in the Stock Annex. Table \@ref(tab:sampling) presents discards, landings and the number of samples collected for each of the fleets considered in the assessment model since 2013. 
+The numbers of samples and measured fishes are relatively stable every year, except for the TRAWLOTH fleet which shows high variability over time. In 2020, a decrease in both the number of samples and  measured fishes was observed. The decrease is specially marked for the LONGLINE fleet and the discards sampling in SPTRAWL7 fleet. Spain contributes the most to the LONGLINE samplings. In 2020, some issues in the Spanish samplings were encountered due to the COVID disruptions coupled with other national data administrative problems (ICES, 2020a).
+In 2021, Spain's sampling intensity returned to previous levels.
+
+### Biological sampling ###
+
+Table \@ref(tab:samplingcty) shows the countries that contribute to the total catch of each Fishery Unit (FU) (see Stock Annex, under "Fishery", for FUs description) and provides the length frequency distributions (LFDs).
+
+In `r dy`, landings length compositions by FU and quarter were provided mainly by Ireland, France, Spain, UK (England and Wales), Scotland and Denmark, while some other countries also provided some data.
+
+Length composition samples are not available for all FUs in each country where landings are observed (see Stock Annex). Only the main FUs are sampled (Table \@ref(tab:samplingcty)).
+
+
+###	Abundance indices from surveys ###
+
+Five surveys which provide relative indices of hake abundance over time are used in the assessment: (1) the French surveys in the Bay of Biscay (FR-RESSGACQ [G2537]) conducted from 1978 to 2002; (2) the French Southern Atlantic Bottom Trawl Survey (EVHOE-WIBTS-Q4 [G9527]) covering the Bay of Biscay and the Celtic Sea with a new design since 1997; (3) the Spanish Porcupine Bottom Trawl Survey (SpPGFS-WIBTS-Q3 [G5768]) conducted in the Porcupine Bank since 2001; (4) the Irish Groundfish Survey (IGFS-WIBTS-Q4 [G7212]) carried out in the west of Ireland and the Celtic Sea since 2003; and (5) the Irish Anglerfish and Megrim Survey (IE-IAMS  [G3098]) in division 6.a and area 7 since 2016. A brief description of each survey is given in the Stock Annex and in Section 2 of this report. Figure \@ref(fig:fsurveys) presents the abundance indices obtained from these surveys. 
+
+The FR-RESSGASC (G2537) survey was a French offshore trawl monitoring program carried out by Ifremer from 1984 to 2003 which was completely halted in 2004 (Battaglia, 2002). The annual survey indices from 1985 until 2002 showed a slightly decreasing trend. The 2002 index is considered not reliable and, thus, not presented on Figure \@ref(fig:fsurveys).
+
+Throughout the available time-series, the abundance index provided by EVHOE-WIBTS-Q4 (G9527) survey showed six peaks in 2002, 2004, 2008, 2012, 2016, 2019 and 2021. The index obtained in 2012 was the highest value of the series, 192% higher than the previous year. In 2013 and 2014, the index accumulated a decrease of 78%. In 2015 and 2016, it increased and the 2016 index value was 2.5 times higher than the 2015 value. In 2017, the index was not available since the survey was not conducted due to major vessel technical issues. In 2018, the index value decreased relative to the 2016 value and was around the value observed in 2015. It increased again in 2019 then decreased in 2020 to a historical minimum level for the whole time-series, followed by an increase in 2021, a new decrease in 2022 and a slight increase in 2024, being currently in one of the lowest levels of the series.
+
+The abundance index provided by the IGFS-WIBTS-Q4 (G7212) survey is consistent with EVHOE WIBTS-Q4 (G9527) survey over recent years. The IGFS-WIBTS-Q4 (G7212) survey index showed four peaks that coincide with those observed in the EVHOE-WIBTS-Q4 (G9527) index but to a lesser extent. In 2012, the index achieved the highest value of the series, 231% higher than the previous year's index. The accumulated decrease in 2013 and 2014 was equal to 84%. The index increased moderately from 2015 to 2017. However, the increase in 2016 was not as significant as that observed with the EVHOE-WIBTS-Q4 (G9527) survey index. The index decreased in 2018 and the observed variation has been low during the following years. Currently, the index is around its historical minimum levels.
+
+The abundance index from SpPGFS-WIBTS-Q4 (G5768) survey follows an increasing trend since 2003, reaching its highest value in 2009 and slightly decreasing in 2010 and 2011. After two years of an increasing trend, with an accumulated increase of 126%, the index decreased considerably in 2015 followed by a subsequent but moderate decline in 2016. After a new increase in 2017, it has been following a downward trend reaching minimum levels. The peaks detected by EVHOE-WIBTS-Q4 (G9527) and IGFS-WIBTS-Q4 (G7212) were also detected in this survey but had occurred a year later, confirming the sharp increase observed in 2017. This is consistent with the fact that this survey catches bigger individuals. In the last years, the index has decreased to a value comparable to that observed in 2003-2005. 
+In 2024, the SpPGFS-WIBTS-Q4 survey sampling on the southeastern area was not carried out due to the vessel’s engine break down, and consequently the results of the survey are likely to be biased in this sector. However, despite the decrease of the total catch of the survey as conse-quence of the under-sampling, the catches of hake did not seem to be affected as could be ex-pected. And the hake abundance slightly increased in 2024 relative to previous year.
+
+The biomass index from IE-IAMS (G3098) survey, which begun in 2016, also follows the trends of the rest of the other surveys, with a peak in 2017 and currently it is near to its lowest historical level.
+
+Although it is not used in the assessment, the North Sea IBTS survey (G2829; Staby *et al*., 2018) providing of hake abundance estimates in the North Sea and Skagerrak (specifically, swept area biomass and abundance estimates) supports the decreasing abundance trends observed in the rest of the surveys in the latest years and the slight increase in 2024 (Figure \@ref(fig:survNORWAY)).
+
+The spatial distribution of the EVHOE-WIBTS-Q4 (G9527), SpPGFS-WIBTS-Q4 (G5768), IGFS-WIBTS-Q4 (G7212) and IE-IAMS (G3098) respective survey catch rates (Kg/h) are provided in Figure \@ref(fig:fsurveysDistr) since `r ndy-15`. It should be noted that EVHOE-WIBTS-Q4 (G9527) and IGFS-WIBTS-Q4 (G7212) surveys use similar gears, while the SpPGFS-WIBTS-Q4 (G5768) and IE-IAMS (G3098) employ quite different gears with different catchabilities,  which consequently the surveys are not directly comparable in the figure maps. The SpPGFS-WIBTS-Q4 (G5768) survey catch rate shows a homogenous spatial distribution in the sampled area throughout the time-series. Among the four surveys, the SpPGFS-WIBTS-Q4 (G5768) shows the higher biomasses values in the maps, confirming that this survey catches bigger individuals. A contraction of the spatial distribution is visible in some years, with the year 2017 showing the greatest contraction (Figure \@ref(fig:fsurveysDistr)). In 2017, the EVHOE-WIBTS-Q4 (G9527) survey was only carried out partially due to some major vessel technical issues, consequently, the index and length data were not included in the model for that year (ICES, 2018). For the IGFS-WIBTS-Q4 (G7212) survey, the spatial distribution of the catch rates was stable throughout the time-series, with a slight decrease in 2018. The southern region of the sampled area showed a higher catch rate in recent years. For the IGFS-WIBTS-Q4 (G7212) survey, high biomass concentration seems to occur in areas closer to the continental French shelf. The IE-IAMS (G3098) survey showed variable abundance values along the years, with a remarkable increase in 2019. Overall, for all surveys combined, a contraction of the spatial distribution is visible since 2015.
+
+The EVHOE-WIBTS-Q4 (G9527) and IGFS-WIBTS-Q4 (G7212) surveys catch mainly young individuals below 25 cm while the SpPGFS-WIBTS-Q4 (G5768) and IE-IAMS (G3098) capture larger sized individuals (30 – 75 cm) (Figure \@ref(fig:fsurveysLFD)). In the case of the EVHOE-WIBTS-Q4 (G9527) survey, the distribution is quite homogeneous year after year, with the mode around 12 cm. In the case of the IGFS-WIBTS-Q4 (G7212) survey, for the years 2020 and 2021, most of the individuals were around 30 cm with almost no individuals around 12 cm, which was the distribution mode for most of the years in the series. The LFD from the SpPGFS-WIBTS-Q4 (G5768) survey is quite flat, varying between 40 and 65 cm (with a peak around 50 cm) which is associated with the previous year's recruitment. This peak was very high in 2017. In the case of the IE-IAMS (G3098) survey the LFD is also quite flat, varying between 30 and 75 cm. The variability of the shape of LFDs of these three latter indices could be motivated by the limited sampling area covered compared with the EVHOE-WIBTS-Q4 (G9527) index that covers a bigger survey area.
+
+
+<!-- ### Commercial catch-effort data ### -->
+<!-- A description of the commercial LPUE indices available to the group is given in the Stock Annex. They are not used in the assessment model. -->
+<!-- Effort and LPUE data for the period 1982-2016 are given in Table 9.4 and Figure 9.4. -->
+<!-- Since the start of the time-series, the effort of A Coruña and Vigo trawl fleets oper-ating in subarea 7 show a decreasing trend. Since 1985, the LPUE of A Coruña trawlers has fluctuated with an increasing trend. In 2012 and 2013, it decreased sharply then had an increasing trend since 2014 with the highest value in 2017. Over the same period, LPUE from Vigo trawlers operating in subarea 7 has fluctuated without any clear trend until 2008 when it started to increase. Since 2016, the index shows a decreasing trend with a steep slope. It must be noted that while A Coruña trawl fleet targets hake, the Vigo trawl fleet is directed at megrim, taking hake only as bycatch.  -->
+<!-- LPUE from Ondarroa pair trawlers operating in divisions 8a,b, shows an increasing trend until 2009.  A significant increase in LPUE was observed in 2008 and, especially in, 2009. A decreasing trend was observed until 2012, although levels were not as low as in the beginning of the time-series. In 2013, it increased slightly declining again in 2014. Since 1999, effort shows a decreasing trend. The LPUE has not been updated since 2015 due to a change in data reporting as this fleet was using e-logbooks for the first time. -->
+
+
+## Assessment ##
+
+This is an update assessment in relation to the assessment carried out during the Benchmark workshop on anglerfish and hake (WKANGHAKE; ICES, 2023b) in early 2022. During this workshop, a revised version of the Stock Synthesis (SS) model (Methot Jr. and Wetzel, 2013) was developed. This new model includes an additional fleet (OTHER fleet disaggregated in trawlers and non-trawlers since 2013) and a new survey, the IE-IAMS (G3098). Compared to the previous SS model used by WGBIE in 2021 (ICES, 2021), the population dynamics are now sex-separated with sex-dependent growth and natural mortality (M). Other changes included in the assessment model configuration this year comprised: the estimation of the steepness by the model, keeping the selectivity random since 1998 for all fleets (previously blocks were defined in some fleets based on observed selectivity changes motivated by changes in legislation and other factors) and down weighting the LFDs.
+
+###	Input data ###
+
+See Stock Annex (under “Input data for SS”).
+The catch contribution of the commercial fleets used in the configuration of the model has changed over time (Figure \@ref(fig:fcatch)). At the beginning of the time-series more than 75% of the catch was caught by trawler fleets. However, in the last years, their contribution declined to around 25% of the total catch in the recent years. On the contrary, the combined catches of longliners and gillnetters was relatively small in the past. Currently, however, the contribution of each of these fleets has increased and is now similar to the contribution of trawlers at the beginning of the time-series. The increase in the biomass of the stock in the last decade has resulted in a high increase in the catch of the OTHER fleet. Nowadays, the annual catch of the trawlers outside the Bay of Biscay and Celtic Sea (TRAWLOTH) is similar to the catch of trawlers in these northern waters.
+Since 2022, a decrease of the importance of longliners catches in favour of gillnet-ters have been observed. This gear change has been attributed to the Commission Implementing Regulation EU 2022/1614 (EU, 2022) aiming at protecting Vulnerable Marine Ecosystems (VME; STECF, 2025) by restricting bottom-contact fishing in VME areas below 400 metres.
+
+The quarterly LFDs for recent landings and discards are given in Figure \@ref(fig:ffleetsLFD). For most of the fleets, the LFD of landings is quite stable over time. The fleets in Area 8 catch smaller individuals. For trawlers, discards occur in the lower part of the distribution while for gillnetters and TROTH fleet this is observed indiscriminately over the whole distribution range. The data collection from the commercial fishery and research surveys during 2020 were affected by COVID restrictions to varying degrees across member states (ICES, 2020a). Spanish discard data and LFDs in SPTRAWL7 fleet were missing for some quarters. The 2020 LONGLINE fleet sampling was also lower compared to previous years with a corresponding odd shaped LFDs. Previous years' LONGLINE fleet LFDs sampling had a smooth and well-defined shape. 
+
+
+####	Data revisions ####
+
+No data revisions have been provided in `r iy`.
+
+###	Model ###
+The Stock Synthesis (SS) assessment model (Methot Jr. and Wetzel, 2013) is used for this stock. The model description and settings are presented in the Stock Annex (under “Current assessment” for model description and “SS settings (input data and control files)” for model settings). 
+
+Input data time-series availability (covering catches, abundance indices, length compositions and discards by year for each fleet) are summarised in Figure \@ref(fig:SSinputs), giving an overview of the data incorporated in the model.
+
+Jittering analysis (i.e. model runs with different starting values) identifies convergence as poten-tial issue for the northern hake SS model. Consequently, the best model is chosen among those with positive definite Hessian and maximum gradient component below 0.0001, based on the minimum likelihood and convergence level.
+
+Jittering analysis (i.e. model runs with different starting values) identifies convergence as poten-tial issue for the northern hake SS model. Consequently, after updating the model by adding the `r ndy` data, the best model was chosen  among those with positive definite Hessian and maxi-mum gradient component below 0.0001, based on the minimum likelihood and convergence level from the jittering analysis.
+<!-- Figure 10.6 shows the likelihood values of those jittered runs with a positive definite hessian and maximum_gradient_component below 0.05. In total, the plot shows 45 valid runs from a total of 65 runs. The likelihood of our final model (blue line) coincides with the minimum likelihood attained by 14 of the 45 runs, and is slightly lower than the likelihood of our base model (first run of the updated model – red line) over which the jitter analysis was carried out. Its likelihood value is 2516.96 and the convergence level (final gradient) is 0.0017169.  -->
+
+
+###	Model results ###
+Residuals of the fit to the surveys log(abundance indices) are presented in Figure \@ref(fig:fsurveysPearson). The upward trend in relative abundance observed until 2017 for all EVHOE-WIBTS-Q4 (G9527), SpPGFS-WIBTS-Q4 (G5768) and IGFS-WIBTS-Q4 (G7212) trawl surveys, has been captured by the model. In the last six years, the model estimates are higher than the observed values for the SpPGFS-WIBTS-Q4 (G5768) survey. While for the rest of the surveys, the model estimates in the last year are lower than the observed values.
+
+The Pearson residuals of the EVHOE-WIBTS-Q4 (G7212) survey LFDs have a “fairly random” pattern with no general trend or lack of fit. This can be observed in Figure \@ref(fig:fsurveysBubbles), where blue and red circles denote positive and negative residuals, respectively. However, the current model has difficulties in explaining the peaks in small individuals observed in the SpPGFS-WIBTS-Q4 (G5768) and IE-IAMS (G3098) surveys as well as the lack of small individuals in IGFS-WIBTS-Q4 (G7212) index for some years.   
+
+Residuals of the LFDs of the commercial fleets' landings and discards (not presented in this report, but available on the GitHub repository^[https://github.com/ices-taf/2024_hke.27.3a46-8abd_assessment]) show some patterns, similar as in previous years' assessments (ICES, 2024). 
+
+The assessment model includes estimation of size-based selectivity functions (selection pattern-at-length) for commercial fleets and for population abundance indices (surveys). For commercial fleets, total catch is subsequently partitioned into discarded and retained portions. Figure \@ref(fig:fselectivities) presents the selectivity for the total catch and Figure \@ref(fig:fretentions) the retention functions by fleet estimated by the model. 
+The selection curve is assumed constant over the whole period for GILLNET, LONGLINE and OTHER fleets. For the North Sea trawlers, two different selectivity functions are estimated. One is for the period 1978-2012 and the other is varying from year to year since 2013. For the other fleets, both selection and retention curves are considered constant until 1997 and varying for the rest of the assessment period (1998-`r dtyr`). The change in retention in 1998 for Spanish trawl fleets was clearly observed when examining the LFDs of the landings and might be due to a more rigorous enforcement of the minimum landing size. The most recent change in the retention of Spanish trawl fleet in area 7 was motivated by the observed change in the mean size of discards from 23.6 cm before 2010 to 28.8 cm after that year. The variation is modelled using a random walk as described in the Stock Annex. The selection pattern has gradually changed over the years, such as the retention ogives. However, both the selection patterns and retention ogives in `r ndy-1` and `r ndy` are almost identical (Figures \@ref(fig:fselectivities) and \@ref(fig:fretentions)). Residuals of the LFDs of the commercial fleets landings and discards (not presented in this report, but available on the GitHub repository^[https://github.com/ices-taf/2024_hke.27.3a46-8abd_assessment]) show some patterns, similar to those seen in previous assessments (ICES, 2024).
+
+<!-- The change in the mean weight of the discarded individuals in this fleet seems to be motivated by the increase in the abundance of small individuals and the decrease in the overall selection rather that in the decrease of the retention ogive.  -->
+
+```{r}
+load(file.path("output","report",paste0('retro', run, '.RData'))) # retro_indicators; retro_sel; sumTab4retro; mohn_rhos
+# mohn_rhos
+```
+
+The retrospective analysis (Figure \@ref(fig:fretroCI)) shows that for the three summary indicators ($F_{1-7}$, SSB and Recruitment) the model results are sensitive to the exclusion of recent data, especially for SSB and $F_{1-7}$. The inclusion of new data affected the recruitment estimates especially in the most recent years, the SSB was generally revised downwards, while the $F_{1-7}$ was revised upwards. The inclusion of new data also overestimated the large incoming recruitments in the first years but the impact on the last years' estimates shows the absence of a clear trend. These cancellation effects reduced the value of the Mohn's rho (Mohn, 1999) for the recruitment (`r round(mohn_rhos$Rec,2)`).
+However, the systematic overestimation of SSB and underestimation of $F_{1-7}$ has not occurred this year and consequently the obtained Mohn’s rho values observed were sharply reduced (Figure \@ref(fig:fretroPeels)). Therefore, as the Mohn’s rho values for SSB and $F_{1-7}$ are within the bounds (`r round(mohn_rhos$SSB,2)` < 0.20 for SSB and `r round(mohn_rhos$F,2)` > -0.15 for $F_{1-7}$). The observed retrospective pattern was acceptable to provide advice according to the WKFORBIAS guidelines (Figure \@ref(fig:fretroPeels)); ICES, 2020b). The inclusion of the `r dy` data has led to a reduction of the retrospective patterns compared to those observed during the WKANGHAKE benchmark (ICES, 2023b), but this improvement needs to be confirmed next year to consider the issue as solved.
+
+Summary results from the SS assessment are given in Table \@ref(tab:summary) and Figure \@ref(fig:fsumPlot). 
+
+```{r recs}
+# Recruits
+if (!grepl("rec",tolower(names(t34)[2]))) stop("Check columns")
+
+rdat <- t34[,1:2]; names(rdat) <- c("year","rec")
+rdat <- rdat %>% mutate(rec = as.numeric(rec))
+
+hist.rec <- rdat %>% filter(year %in% 1990:ndy) %>% .$rec
+gmrec    <- exp(mean(log(hist.rec)))
+rhigh <- rdat %>% arrange(desc(rec)) %>% .[1,]
+rbgm  <- rdat %>% filter(year > ndy - 4, rec < gmrec) %>% .$year #"2020" "2021" "2022"
+r1980 <- rdat %>% filter(year == 1980) %>% .$rec
+
+# SSB
+if (!grepl("ssb",tolower(names(t34)[4]))) stop("Check columns")
+
+ssbdat <- t34[,c(1,4)]; names(ssbdat) <- c("year","ssb")
+ssbdat <- ssbdat %>% mutate(ssb = as.numeric(ssb)) %>% 
+  filter(year != "Arithmetic mean")
+
+ssb80s_max <- ssbdat %>% filter(year < 1990) %>% arrange(desc(ssb))
+ssb90s_min <- ssbdat %>% filter(year >= 1990, year < 2000) %>% arrange(ssb)
+ssb_max <- ssbdat %>% arrange(desc(ssb))
+
+if (ssb_max$year[1] < 2000) stop("Check text below") # highest 2015
+
+ssb_minl <- ssbdat %>% filter(year > ssb_max$year[1]) %>% arrange(ssb)
+
+# F
+if (!grepl("F",names(t34)[9])) stop("Check columns")
+
+fdat <- t34[,c(1,9)]; names(fdat) <- c("year","f")
+fdat <- fdat %>% mutate(f = as.numeric(f)) %>% 
+  filter(year != "Arithmetic mean", f <= ndy)
+
+f70s <- fdat %>% filter(year < 1984) %>% .$f %>% range()
+f90s <- fdat %>% filter(year>=1990, year < 2000) %>% .$f %>% mean() %>% icesRound()
+
+ffmsy_low <- fdat %>% mutate(ffmsy = f/fmsy) %>% filter(ffmsy < 1)
+ssb_minl <- ssbdat %>% filter(year > ssb_max$year[1]) %>% arrange(ssb)
+
+flast <- fdat %>% filter(year == dtyr) %>% .$f
+```
+Recruitment values (age 0) estimated by the model are provided in Table \@ref(tab:summary). For the recruitment, fluctuations appear to be without substantial trend over the whole series. The recruitment in `r rhigh$year` was the highest in the whole series with `r numf(round(rhigh$rec/1000))` million individuals and the ones in 2020-2024 were below the geometric mean since 1990 (`r numf(round(gmrec/1000))` million individuals).
+From high levels at the start of the series (`r numf(round(ssb80s_max$ssb[1]))` t in `r ssb80s_max$year[1]`), the SSB decreased steadily to a low level at the end of the 1990s (`r numf(round(ssb90s_min$ssb[1]))` t in `r ssb90s_min$year[1]`). Since then, SSB increased to the highest value of the series in `r ssb_max$year[1]` (`r numf(round(ssb_max$ssb[1]))` t) and then decreased progressively until `r ssb_minl$year[1]`  (`r numf(round(ssb_minl$ssb[1]))` t).
+
+The F is calculated as the average annual F for ages 1–7 ($F_{1-7}$). Values of $F_{1-7}$ increased from values around `r paste(f70s, collapse = "-")` in the late 1970s and early 1980s to values around `r f90s` during the 1990s. Between 2006 and 2013, $F_{1-7}$ declined sharply. Since `r ffmsy_low$year[1]`, $F_{1-7}$ remains below $F_{MSY}$ (`r icesRound(fmsy)`).  The $F_{1-7}$ estimate for `r ndy` (`r icesRound(flast)`) is well below $F_{MSY}$.
+
+The 90% CIs are similar to previous year's ones (Figure \@ref(fig:fsumPlot)). These intervals correspond to the uncertainty estimated by the SS model and do not include all the existing uncertainty. For example, it does not include all of the uncertainty in the input data. However, in the last WKANGHAKE benchmark (ICES, 2023b) the data weighting in SS was revisited in order to get more realistic CIs. Specifically, the weight of the LFDs in the likelihood components has been reduced by multiplying them by 0.1.
+
+
+##	Catch options and prognosis ##  
+
+###	Assumption on recruitment 
+<!-- Replacement of recruitment in `r ndy-1` and `r ndy` by the geometric mean recruitment -->
+In 2020 and 2021 assessments, recruitment estimates for the last two data years (2018-2019 and 2019-2020, respectively), were replaced by the geometric mean (GM). The 2020 recruitment was close to the GM. However, the 2019 estimate was well above that level. The assessment model overestimated the three abundance indices available in the last two years. Furthermore, the model has revised the most recent recruitments downwards. Hence, replacing the recruitment estimates for the last two years was considered more reliable and precautionary for projections. Between 2022 and `r dtyr` the recruitment estimates were not replaced (ICES, 2024). However, the new methodology agreed upon during the WKANGHAKE benchmark (ICES, 2023b) allows replacing recruitment estimates for the last two data years with the recruitment predicted from the SS stock-recruit relationship (SRR), but in the cases when the working group believes these are not accurately estimated.
+
+This year, the recruitment estimates for the last two years, (`r ndy` and `r ndy-1`), were not replaced. The `r ndy-1` and `r ndy` recruitments were below the GM (1990-`r ndy`). The assessment model overestimated two of the four abundance indices available in the last two years  (underestimating the ones in the latest year). If we focus on the indices that give information on smaller individuals, the assessment estimates quite precisely values for the IGFS-WIBTS-Q4 (G7212) survey and for the EVHOE-WIBTS-Q4 (G9527) survey in both years. Hence, not replacing the recruitment estimates for the last two years was considered more reliable <!-- and precautionary --> for projections.
+
+Recruitment in the projection years (`r paste(iy,fy, sep = "-")`) was estimated by the model based on the fitted Beverton-Holt SRR.
+
+<!-- Figure \@ref(fig:fageConCadv) shows the contribution of each age class to the catch advice in 2021, when $F_{advice} = F_{MSY}$ was used, replacing the recruitment in the last two years by the GM and without replacing it. When the recruitment was not replaced, the contribution of 2019 year class (age 3) to the advice was around 35%. However, when the recruitments were replaced the contribution reduced to the half. Thus, the catch advice strongly depends in this year class and replacing it by the GM is considered more precautionary.  -->
+
+
+###	Short–term projection ###
+
+SS has a forecast module which provides the capability to do a projection for a user-specified number of years that is directly linked to the model ending conditions, associated uncertainty, and to a specified level of fishing intensity. This was the tool used to carry out the short-term projections, as defined during the WKANGHAKE benchmark (ICES, 2023b), and described in the Stock Annex. 
+
+```{r coptTab_csq}
+csq   <- as.numeric(t34[t34$Year == dy, "Catch (t)"])
+ssbiy <- as.numeric(ssbdat[ssbdat$year == iy, "ssb"])
+ciy   <- as.numeric(iyTab[paste0("Catches",iy)])
+ssbpy <- as.numeric(iyTab[paste0("SSB",fy)])
+
+Cchg   <- round((ciy/csq-1)*100)
+SSBchg <- round((ssbpy/ssbiy-1)*100)
+```
+
+For the current projection, unscaled F is used, corresponding to $F_{1-7}$ = `r icesRound(fsq)`. Recruitment short-term projection assumption values are given in Table \@ref(tab:stf). Landings in `r fy` and SSB in `r sy` predicted for various levels of fishing mortality in `r fy` are also given in Table \@ref(tab:stf) and Figure \@ref(fig:fstf).
+
+Maintaining status quo $F_{1–7}$ in `r iy` is expected to result to a decrease in both the catch and the SSB with respect to `r ndy`, at around `r Cchg`% and `r SSBchg`%, respectively.
+
+When we compare present year short-term forecast outcomes with those obtained from previous year ones, we observe that the catches, the fishing mortality, and the recruitment assumed last year for `r ndy-1` and `r ndy` have been revised this year (the recruitment in `r ndy-1` slightly upwards, while the one in `r ndy` strongly downwards and the fishing mortality downwards in both years), leading to a minor increase of the SSB (Figure \@ref(fig:fstfComp)). Both the selectivity and retention curves are quite stable (Figure \@ref(fig:fstfSelRet)). However, the numbers at age are higher for any age with some exceptions <!-- except 2-year old individuals / of below 6-year-old and higher for the older ones  --> (Figure \@ref(fig:fstfNage)). The expected reduction of the SSB is likely due to the exploitation at $F_{MSY}$ levels considering the stock is currently well above MSY $B_{trigger}$.
+
+
+```{r coptTab_fsqmsy}
+copt_fsq <- coptTab[coptTab[,paste0("F",fy)] == fsq,]
+
+cadv_fsq <- copt_fsq[,grepl("cat",tolower(names(coptTab)))]
+Cchg_fsq <- round((cadv_fsq/ciy-1)*100)
+
+copt_fmsy <- coptTab[1,]
+
+pblim_fmsy <- copt_fmsy[,grepl("pblim",tolower(names(coptTab)))]
+```
+
+Maintaining status quo F in `r fy` is expected to result in a decrease in both the catch and the SSB with respect to `r iy`, around `r Cchg_fsq`% and `r copt_fsq$SSBchg`%, respectively. While exploitation levels at  $F_{MSY}$ in `r fy` would imply a reduction of SSB with respect to `r iy` around `r copt_fmsy$SSBchg`%, implying a `r pblim_fmsy` probability of SSB in `r sy` falling below $B_{lim}$. 
+
+
+###	Yield and biomass per recruit analysis ###
+
+<!-- Options for long-term projection are indicated in the Stock Annex.  -->
+Long-term projections were carried out using SS, which calculates the equilibrium level of spawner per recruit (SPR) and yield per recruit (YPR) that would occur if fishing according to a trial level of fishing intensity and based on this SPR and the unfished level ($SPR_0$) calculates the absolute level of recruitment, spawning biomass, and yield that would occur if ﬁshing intensity were maintained at this rate (Methot Jr. and Wetzel, 2013).
+
+Results of equilibrium yield and SSB per recruit (SSBPR) are presented in Table \@ref(tab:ypr) and Figure \@ref(fig:fypr). The F-multiplier in Table \@ref(tab:ypr) is with respect to maximum equilibrium YPR ($F_{max}$).
+
+Considering the yield and SSB per recruit curves, F status quo ($F_{sq}$ = average $F_{1-7}$ in the final 3 assessment years, `r paste(as.numeric(dy)-2,dy, sep = "-")`), $F_{0.1}$, $F_{35\%}$, $F_{30\%}$ and $F_{MSY}$ are respectively estimated to be `r round(t36b[1,2]*100)`%, `r round(t36b[2,2]*100)`%, `r round(t36b[3,2]*100)`%, `r round(t36b[4,2]*100)`%, and `r round(t36b[5,2]*100)`% of $F_{max}$. The maximum equilibrium YPR <!-- ($F_{max}$ = xxx) -->is similar to the equilibrium yield at $F_{sq}$.
+
+
+##	Biological reference points ##
+
+Biological reference points for the stock of northern hake were recalculated in 2022 during the WKANGHAKE benchmark (ICES, 2023b) based on the new model settings. The reference points in use for the stock are as follows:
+
+```{r ,  fig.height= 4}
+include_graphics(file.path(taf.boot.path("initial/images"),'RefPtsTable.png'))
+```
+
+
+##	Comments on the assessment ##
+
+The current model presents SSB for females only, which is considered as an improvement since egg production is considered a good metric of reproductive potential and female SSB is a better proxy of egg production than total mature biomass. The reference points were calculated relative to the female SSB (ICES, 2023b).
+
+Actual assessment estimates cannot be compared with those obtained prior to 2022, as the assessment model configuration was changed as a result of the WGANGHAKE benchmark (ICES, 2023b) which changed the perception of the stock relative to the new reference points.
+
+The retrospective pattern shows a general trend to correct SSB downwards and F upwards. However, in current assessment the contrary revision has been observed. The causes of these observed pattern are not yet well understood and should be further explored to identify the causes for this bias. As the issue cannot be considered solved until current year reduction of the retrospective patterns is confirmed next year.
+
+The sample size provided for the length distributions should be related to the yearly available samples, as the model results are highly sensitive to these values, especially for years with lower sampling intensity, such was the case in 2020 when sampling levels declined due to COVID disruption (ICES, 2020a).
+
+
+###	Sensitivity runs ###
+
+The inclusion of the `r dy` data led to a slight increase of the retrospective patterns in the latest years, relative to those observed in the last year assessment (ICES, 2024). Leading to values inside the ICES recommended bounds (ICES, 2020b), with Mohn's rho values at `r round(mohn_rhos$SSB,2)` (>0.20) for SSB and `r round(mohn_rhos$F,2)` (<-0.15) for $F_{1–7}$. However, based on the ICES guidelines (ICES, 2025), it was still possible to give an advice this year.
+
+<!-- Noting that there was ++++ -->
+<!-- However, this approach did not allowed to decrease the Mohn's rho values. -->
+
+```{r coptGM}
+iyGM   <- read.csv(file.path("model", "sum_advice", "table_intermediate_yearGM_icesRound.CSV"))
+coptGM <- read.csv(file.path("model", "sum_advice", paste0("catchoptiontableGM",run,"_ICESround.csv")))
+copt   <- read.csv(file.path("model", "sum_advice", paste0("catchoptiontable",run,"_ICESround.csv")))
+
+reciy <- t35a[,paste("Rec",iy)]
+recfy <- t35a[,paste("Rec",fy)]
+# gmrec
+# (coptGM[1,grep("cat",tolower(names(coptGM)))]/copt[1,grep("cat",tolower(names(copt)))]-1)*100
+```
+
+Given the fact that the estimated recruitments for the interim ($Rec_{`r iy`}$ = `r numf(round(reciy/1000))` million individuals) and the advice years ($Rec_{`r fy`}$ = `r numf(round(recfy/1000))` million individuals) were above the GM recruitment (`r numf(round(gmrec/1000))` million individuals), the short-term forecast was carried out replacing these values by the GM of the recruitment.
+
+<!-- Given the fact that the previously used model (ICES, 2021) was acceptable for giving advice and its change has been motivated by having similar assessment settings as the ones used for Southern hake. Therefore, in contrast to present results, the update assessment of the past model was carried out. The diagnostics for the previous model implementation were similar to those obtained with the new model. However, the inclusion of `r iy` data increased the retros to levels even higher than those observed in the currently accepted assessment (Figures \@ref(fig:fretroCI_oldM) and \@ref(fig:fretroPeels_oldM)).  -->
+
+The advice for the stock under $F_{MSY}$ (`r icesRound(fmsy)`) would imply catches at `r numf(coptGM[1,grep("cat",tolower(names(coptGM)))])` t (when replacing the recruitment by the GM) and for the lower and upper ranges at `r numf(coptGM[3,grep("cat",tolower(names(coptGM)))])` and `r numf(coptGM[4,grep("cat",tolower(names(coptGM)))])` t, respectively. Being these values very similar to those obtained when using the estimates from the SRR fitted by the assessment model.
+
+<!-- The advice for the stock given this model under $F_{MSY}$ (0.26 given previously defined reference points) would imply a 14% reduction with catches at 64 854 t (when replacing the recruitment by the GM) and for the lower and upper ranges at 46 992 t and 92 308 t, respectively. In comparison with the 82 127 t advised with present model under MSY approach (9% higher than this for `r iy`). -->
+
+
+## Future benchmark ##
+
+A follow up interbenchmark was recommended and supported by WGBIE in 2023 (ICES, 2024) to revise some data parameters and explore other model configurations that can further improve the quality of the current northern hake stock assessment model configuration. However, with the new benchmark process (ICES, 2023c), if these changes are considered as minor they could be resolved intersessionally by WGBIE. However, if the revisions are considerable, WGBIE should ask for a benchmark to have the updates and results externally reviewed.
+
+The following points should be revised:
+
+* Biological parameters. Revise some biological parameters to obtain stable stock-specific, sex-disaggregated, and time-varying model estimates which can mitigate overestimated stock productivity (ICES, 2024). 
+For example, actual values of M integrated in the model were taken from a study of some fish stocks in the Mediterranean (GCFM, 2019a; 2019b), length-weight parameters have been inherited from the southern hake stock while the growth parameters are not sex-specific.
+
+* Weighting options. Further explore and perform sensitivity analyses of the model estimates to better calibrate the likelihood components with the adequate weights defined for each component. Furthermore, there is a need for a standardised protocol to determine the effective sample size needed when updating the input data in the model in order to account for significant sampling changes.
+
+* Retrospective patterns. Further investigate and identify the contributing factors to the increasing retrospective patterns observed in the current assessment model.
+
+
+##	Management considerations ##
+
+<!-- Although there has been a general decrease in the retrospective patterns from the assessments in recent year, the -->
+<!-- tendency of revising the SSB downwards while $F_{1–7}$ upwards (ICES, 2023b) is still observed. This may result in an inflated catch advice. -->
+
+<!-- The significant increase in SSB and the decrease in fishing mortality are the consequences of the strong recruitment in 2008 and 2012. However, the increase rate should be taken with caution as limited information is currently available to explain the variation in abundance of large fish and the model is very sensitive to the data and settings used. It must be noted that the fast growth rate  combined with the assumed high natural mortality rate (M=0.4 since the 2010 benchmark, ICES, 2010) generates a rapid turnover of the hake stock dynamic. This means that short-term predictions in SSB and landings are strongly related to variations in recruitment. Now, that the SSB has decreased, caution is needed to avoid a rapid decrease in biomass.  -->
+
+Since 2017, the observed catches have been significantly below the TAC and the catch advice, which may indicate an overestimation of the stock productivity. 
+
+It should be noted that the ICES catch advice provided for this year is for the whole hake stock, including those fished in Norwegian waters (subarea 4). However, the sum of the TACs for the northern hake stock since 2019 considered in this report are only for the EU member states and the UK excluding subarea 4.
+
+
+## References
+
+<!-- #! PENDING cross references (issues with formats) -->
+
+Battaglia, A. 2002. Manuel des protocoles de campagne halieutique. Ressources halieutiques du golfe de Gascogne. Campagnes RESSGASC. DRV/RH/DT/2002-006.
+
+EU. 1998. Regulation (EC) No 850/98 of 30 March 1998 for the conservation of fishery resources through technical measures for the protection of juveniles of marine organisms.
+
+EU. 2001a. Regulation (EC) No 1162/2001 of 14 June 2001 establishing measures for the recovery of the stock of hake in ICES subareas III, IV, V, VI and VII and ICES divisions VIII a, b, d, e and associated conditions for the control of activities of fishing vessels.
+
+EU. 2001b. Regulation (EC) No 2602/2001 of 27 December 2001 establishing additional technical measures for the recovery of the stock of hake in ICES subareas III, IV, V, VI and VII and ICES divisions VIIIa,b,d,e.
+
+EU. 2002. Regulation (EC) No 494/2002 of 19 March 2002 establishing additional technical measures for the recovery of the stock of hake in ICES subareas III, IV, V, VI and VII and ICES divisions VIII a, b, d, e.
+
+EU. 2004. Regulation (EC) No 811/2004 of 21.4.2004 establishing measures for the recovery of the Northern hake (repealed by Commission Regulation n° 2019/472).
+
+EU. 2019. Regulation (EU) 2019/472 of the European Parliament and of the Council of 19 March 2019 establishing a multiannual plan for stocks fished in the Western Waters and adjacent waters, and for fisheries exploiting those stocks, amending Regulations (EU) 2016/1139 and (EU) 2018/973, and repealing Council Regulations (EC) No 811/2004, (EC) No 2166/2005, (EC) No 388/2006, (EC) No 509/2007 and (EC) No 1300/2008.
+
+EU. 2023. Council Regulation (EU) 2023/194 of 30 January 2023 fixing for 2023 the fishing opportunities for certain fish stocks, applicable in Union waters and, for Union fishing vessels, in certain non-Union waters, as well as fixing for 2023 and 2024 such fishing opportunities for certain deep-sea fish stocks. http://data.europa.eu/eli/reg/2023/194/oj
+
+GCFM. 2019a. Report of the Working Group on Stock Assessment of Demersal Species (WGSAD). Benchmark session for the assessment of European hake in GSAs 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 19, 20, 22, 23 and 26. FAO headquarters, Rome, Italy, 2–7 December 2019. https://www.fao.org/gfcm/technical-meetings/detail/en/c/1313336/
+
+GCFM. 2019b. Report of the Working Group on Stock Assessment of Demersal Species (WGSAD). Benchmark session for the assessment of European hake in GSAs 17-18. FAO headquarters, Rome, Italy, 15-18 January 2019. https://www.fao.org/gfcm/technical-meetings/detail/en/c/1194087/
+
+<!-- ICES. 2010. Report of the Benchmark Workshop on Roundfish (WKROUND), 9–16 February 2010, Copenhagen, Denmark. ICES CM 2010/ACOM: 36, 183 pp -->
+
+ICES. 2016. Report of the Working Group for the Bay of Biscay and the Iberian waters Ecoregion (WGBIE) 13-19 May 2016 ICES HQ, Copenhagen, Denmark. ICES CM/ACOM: 12, 513 pp.
+
+ICES. 2018. Report of the Working Group for the Bay of Biscay and the Iberian waters Ecoregion (WGBIE) 3-10 May 2018 ICES HQ, Copenhagen, Denmark. ICES CM/ACOM: 12, 642 pp.
+
+ICES. 2020a. Working Group for the Bay of Biscay and the Iberian Waters Ecoregion (WGBIE). ICES Scientific Reports. 2:49. 865 pp. http://doi.org/10.17895/ices.pub.6033
+
+ICES. 2020b. Workshop on Catch Forecast from Biased Assessments (WKFORBIAS; outputs from 2019 meeting). ICES Scientific Reports. 2:28. 38 pp. http://doi.org/10.17895/ices.pub.5997
+
+ICES. 2023a. Advice on fishing opportunities. In Report of the ICES Advisory Committee. ICES Advice 2023. Section 1.1.1.  https://doi.org/10.17895/ices.advice.22240624.
+
+ICES. 2023b. Benchmark workshop on anglerfish and hake (WKANGHAKE; outputs from 2022 meeting). ICES Scientific Reports. 5:17. 354 pp. https://doi.org/10.17895/ices.pub.20068997
+
+ICES. 2023c. ICES Guidelines for Benchmarks. Version 1. ICES Guidelines and Policies - Advice Technical Guidelines. 26 pp. https://doi.org/10.17895/ices.pub.22316743
+
+ICES. 2024. Working Group for the Bay of Biscay and the Iberian Waters Ecoregion (WGBIE). ICES Scientific Reports. 6:59. 1078 pp. https://doi.org/10.17895/ices.pub.25908130
+
+ICES. 2025. ICES Guidance for completing single-stock advice 2025. ICES Advisory Committee. 74 pp.
+
+Methot Jr., R.D. and Wetzel C.R. Wetzel. 2013. Stock synthesis: A biological and statistical framework for fish stock assessment and fishery management. Fisheries Research 142: 86-99.
+
+<!-- Millar C, Large S, Magnusson A, Pinto C, Petre L (2025). icesSAG: Stock Assessment Graphs Database Web Services. R package version 1.6.2, https://github.com/ices-tools-prod/icessag. -->
+<!-- TO INCLUDE THE REFERENCE -->
+
+Mohn, R. 1999. The retrospective problem in sequential population analysis: An investigation using cod fishery and simulated data. ICES Journal of Marine Science, 56: 473-488.
+
+<!-- Shepherd, J.G., 1999. Extended survivors analysis: an improved method for the analysis of catch-at-age data and abundance indices. ICES Journal of Marine Science. Vol. 56, No. 5.pp. 584–591. -->
+
+Staby, A., Skjæraasen,  J.E., Geffen, A.J. and Howell, D. 2018. Spatial and temporal dynamics of European hake (Merluccius merluccius) in the North Sea, ICES Journal of Marine Science 75 (6): 2033–2044. https://doi.org/10.1093/icesjms/fsy103
+
+STECF. 2016. Reports of the Scientific, Technical and Economic Committee for Fisheries (STECF) - Evaluation of the landing obligation joint recommendations (STECF-16-10). 2016. Publications Office of the European Union, Luxembourg, 102 pp.
+
+ 
+\newpage
+
+## Tables
+
+```{r}
+cap.main <- "Hake (*Merluccius merluccius*) in subareas 4, 6, and 7, and in divisions 3.a, 8.a–b, and 8.d, Northern stock."
+tab.cap.text <- paste0(cap.main, " Estimates of catches (in ‘000 t) by ICES area for 1961-", dy, " (L: landings and D: discards).")
+foot.cap1 <- "Divisions 3.a and 4.b,c are included in column 3, 4 and 6 only after 1976. There are some unallocated landings (moreover for the period 1961-1970)."
+foot.cap2 <- "ICES Discard estimates. In 2003-2013 partial discard estimates are available and used in the assessment. For remaining years for which no values are presented, some estimates are available but not considered valid and thus not used in the assessment."
+foot.cap3 <- "From 1978 total catches used for the Working Group."
+```
+```{r catches,tab.cap = tab.cap.text, tab.id = 'catches'}
+ft31 <- autofit(fontsize(ft31, size = 7, part = 'all'), add_w = 0.005, add_h = 0.001)
+ft31 <- line_spacing(ft31,  space = 0.1, part = "body")
+ft31 <- width(ft31, width = 0.35)
+ft31 <- footnote(ft31, i = 1, j = 2:4, part = 'header', inline = TRUE, sep = "\n", 
+                 value = as_paragraph(c( foot.cap1, foot.cap2, foot.cap3)), 
+                 ref_symbols = as.character(1:3))
+
+ft31
+```
+
+\newpage
+```{r}
+tab.cap.text <- paste0(cap.main, " Estimates of below minimum size landings (in kg) by year and country.")
+```
+```{r BMSland, tab.cap = tab.cap.text, tab.id = 'BMSland'}
+BMSland <- read.csv(file.path(taf.boot.path("initial/data"), "BMSlandings_2015_2024_summary.csv"), sep = ";") %>% 
+  mutate(year = ac(year), catfch_kg = ac(catfch_kg)) %>% #mutate(catfch_kg = numf(catfch_kg))%>%
+  arrange(country) %>% 
+  pivot_wider(names_from = "country", values_from = "catfch_kg") %>% 
+  rename(Year = year)
+  
+bmsft <- flextable(BMSland)
+
+bmsft <- autofit(fontsize(bmsft, size = 7, part = 'all'), add_w = 0.005, add_h = 0.001)
+bmsft <- line_spacing(bmsft,  space = 0.1, part = "body")
+# bmsft <- width(bmsft, width = 0.35)
+
+bmsft
+```
+
+\newpage
+```{r}
+tab.cap.text <- paste0(cap.main, " Discards and landings (in tonnes), number of length samples per catch category (NLgSp_D and NLgSp_L) and number of fishes measured per catch category (NLgMs_D and NLgMs_L) since 2013 for the fleets used in the assessment model.")
+```
+```{r sampling,tab.cap = tab.cap.text, tab.id = 'sampling'}
+ft32 <- fontsize(ft32, size = 7, part = 'all')
+ft32 <- autofit(ft32)
+ft32 <- line_spacing(ft32,  space = 0.1, part = "body")
+ft32
+```
+
+\newpage
+```{r}
+tab.cap.text <- paste0(cap.main, " Catches (C) and length-frequency distribution (LFD) by Fishery Unit (FU) provided in ", dy, ". See Stock Annex for FU definition.")
+```
+```{r samplingcty, tab.cap = tab.cap.text, tab.id = 'samplingcty'}
+ft33 <- fontsize(ft33, size = 7, part = 'all')
+ft33 <- line_spacing(ft33,  space = 0.1, part = "body")
+ft33 <- width(ft33, width = 0.6)
+ft33
+```
+
+\newpage
+```{r}
+tab.cap.text <- paste0(cap.main, " Summary of landings (model fit) and assessment results.")
+```
+```{r summary, tab.cap = tab.cap.text, tab.id = 'summary'}
+ft34 <- fontsize(ft34, size = 7, part = 'all')
+ft34 <- line_spacing(ft34,  space = 0.1, part = "body")
+ft34 <- width(ft34, width = 0.6)
+ft34
+```
+
+\newpage
+```{r}
+tab.cap.text <- paste0(cap.main, " Catch option table.")
+```
+```{r stf, tab.cap = tab.cap.text, tab.id = 'stf'}
+ft35a <- fontsize(ft35a, size = 7, part = 'all')
+ft35a <- line_spacing(ft35a,  space = 0.1, part = "body")
+ft35a <- width(ft35a, width = 0.6)
+ft35a
+```
+```{r stfb}
+ft35b <- fontsize(ft35b, size = 7, part = 'all')
+ft35b <- line_spacing(ft35b,  space = 0.1, part = "body")
+ft35b <- width(ft35b, width = 0.6)
+ft35b
+```
+
+\newpage
+```{r}
+tab.cap.text <- paste0(cap.main, " Yield-per-recruit (YPR) table.")
+```
+```{r ypr, tab.cap = tab.cap.text, tab.id = 'ypr'}
+ft36a <- fontsize(ft36a, size = 7, part = 'all')
+ft36a <- line_spacing(ft36a,  space = 0.1, part = "body")
+ft36a <- width(ft36a, width = 0.6)
+ft36a
+```
+```{r yprb}
+ft36b <- fontsize(ft36b, size = 7, part = 'all')
+ft36b <- line_spacing(ft36b,  space = 0.1, part = "body")
+ft36b <- width(ft36b, width = 0.6)
+ft36b
+```
+
+\newpage
+
+
+## Figures
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Total catch (in tonnes) over time, the colours correspond to the fleets used in the assessment model configuration.")
+```
+```{r  fcatch, fig.cap = fig.cap.text, fig.width = 6, fig.height= 5}
+include_graphics(file.path("report","wg_report",paste0('catch_ss3_fleet', run, '.png')))
+```
+<!-- #! IMPROVEMENT: add also advice values -->
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Abundance indices from surveys.")
+```
+```{r  fsurveys, fig.cap = fig.cap.text, fig.width = 6, fig.height= 6}
+include_graphics(file.path("report","wg_report",paste0('surveys_biomass', run, '.png')))
+```
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Swept area biomass and abundance estimates of hake in the North Sea and Skagerrak, based on North Sea IBTS survey (G2829) data for the period 2000-", dy, ".")
+```
+```{r  survNORWAY, fig.cap = fig.cap.text, fig.width = 6, fig.height= 6}
+include_graphics(file.path(taf.boot.path("initial","images"), paste0("NO_IBTStrends_2000_",dtyr,".png")))
+```
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Spatial distribution of the EVHOE-WIBTS-Q4 (G9527), IE-IAMS (G3098), IGFS-WIBTS-Q4 (G7212) and SpPGFS-WIBTS-Q4 (G5768, see SP-PORC) surveys' biomass (Kg/h) indices from ", dtyr-15, " to ", dy, ". Note that surveys are not directly comparable due to the use of different gears with different catchabilities.")
+```
+```{r  fsurveysDistr, fig.cap = fig.cap.text, fig.width = 6, fig.height= 7}
+include_graphics(file.path("data","report",'surveys_distr.png'))
+```
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Length-frequency distribution of surveys in the most recent years, from ", dtyr-4, " to ", dy, ".")
+```
+```{r  fsurveysLFD, fig.cap = fig.cap.text, fig.width = 6, fig.height= 6}
+include_graphics(file.path("report","wg_report",paste0('surveys_LFD', run, '.png')))
+```
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Length-frequency distribution for landings and discards by fleet and by season (columns) in the most recent years, from ", dtyr-2, " to ", dy, ", with the fleet as used in the assessment model configuration.")
+```
+```{r  ffleetsLFD, fig.cap = fig.cap.text, fig.width = 7, fig.height= 8}
+include_graphics(file.path("report","wg_report",paste0('Fleets_LFD', run, '.png')))
+```
+
+<!-- ```{r  IrDiscRev, fig.cap = 'Hake (*Merluccius merluccius*) in subareas 4, 6, and 7, and in divisions 3.a, 8.a–b, and 8.d, Northern stock. Revision of the Irish discards in 2020 (left), compared to the values (right) used in the WKANGHAKE benchmark (ICES, 2023b).', fig.width = 6, fig.height= 7} -->
+<!-- include_graphics('zz_plots/Pres_Figure_rev_2020IrDisc.png') -->
+<!-- ``` -->
+
+<!-- ```{r  IGFSrev, fig.cap = 'Hake (*Merluccius merluccius*) in subareas 4, 6, and 7, and in divisions 3.a, 8.a–b, and 8.d, Northern stock. Abundance index from IGFS-WIBTS-Q4 survey. Values used in the WKANGHAKE benchmark (ICES, 2023b). Old (green) and new (red) estimates for the WGBIE 2022 assessment.', fig.width = 6, fig.height= 7} -->
+<!-- include_graphics('zz_plots/Pres_Figure_rev_IndexIGFSdif.png') -->
+<!-- ``` -->
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Input data series used in the model for the modelled fleets. Each circle is proportional to the total catch (for the cathes), the precision (for the indices), the total sample size composition (for mean length-at-age observations) and to discards. Note that, since the circles are scaled relative to the maximum value of each parameter type, scaling between each set of plots should not be compared. This is a seasonal model, so scaling is based on either the sum of samples within each year (i.e., compositions) or the average among observations within a year (i.e., index uncertainty).")
+```
+```{r  SSinputs, fig.cap = fig.cap.text, fig.width = 6, fig.height= 7}
+include_graphics(file.path("cluster",finalrun,"plots_r4ss","data_plot2.png"))
+```
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Residuals of the fits to the surveys' log(abundance indices) for FR-RESSGASC (G2537), EVHOE-WIBTS-Q4 (G9527), SpPGFS-WIBTS-Q3 (G5768) and IGFS-WIBTS-Q4 (G7212).")
+```
+```{r  fsurveysPearson, fig.cap = fig.cap.text, fig.width = 6, fig.height= 7}
+include_graphics(file.path("report","wg_report",paste0('pearson_surveys', run, '.png')))
+```
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Pearson residuals of the fit to the length distributions of the surveys' abundance indices by sex (F = females, M = males) for EVHOE (EVHOE-WIBTS-Q4), PORCUPINE (SPGFS-WIBTS-Q3, G576) and IGFS (IGFS-WIBTS-Q4, G5768). Fits are by quarter and sex.")
+```
+```{r  fsurveysBubbles, fig.cap = fig.cap.text, fig.width = 6, fig.height= 6}
+include_graphics(file.path("report","wg_report",paste0('Bubbles_surveys', run, '.png')))
+```
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Selection curves, by commercial fleet and by sex, estimated by the SS model. Selectivity trends for ", ndy-1, " (dashed black line) and ", dy, " (solid black line).") #! COMPROBAR
+```
+```{r  fselectivities, fig.cap = fig.cap.text, fig.width = 6, fig.height= 8}
+include_graphics(file.path("report","wg_report",paste0('selectivities', run, '.png')))
+```
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Retention curves, by commercial fleet and by sex, estimated by the SS model. Retention trends for ", ndy-1, " (dashed black line) and ", dy, " (solid black line).") #! COMPROBAR
+```
+```{r fretentions, fig.cap = fig.cap.text, fig.width = 6, fig.height= 8}
+include_graphics(file.path("report","wg_report",paste0('retentions', run, '.png')))
+```
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Retrospective plot from the SS assessment model including the confidence intervals (95% CIs, grey trends).")
+```
+```{r fretroCI, fig.cap = fig.cap.text, fig.width = 6, fig.height= 5}
+include_graphics(file.path("report","wg_report",paste0('retro_CI', run, '.png')))
+```
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Differences between time-series in the retrospective analysis plot from the SS model for ", ndy-5, "-", dy, "  using the configuration agreed during WKANGHAKE benchmark (ICES, 2023b). The value in the bottom-left of each plot corresponds to the Mohn’s rho estimates for ", dy, ".")
+```
+```{r fretroPeels, fig.cap = fig.cap.text, fig.width = 6, fig.height= 7}
+include_graphics(file.path("report","wg_report",paste0('retro_peels', run, '.png')))
+```
+
+```{r wkforbias, fig.cap = "Schematic diagram from WKFORBIAS (ICES, 2020b). Hake stepwise procedure pattern (solid blue arrows) implemented to produce the advice based on the SS assessment model for a given retrospective pattern.", fig.width = 7, fig.height= 5}
+include_graphics(file.path(taf.boot.path("initial","images"),'wkforbias_scheme.png')) #! PENDING
+```
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Summary plot of stock trends including the confidence intervals (90% CIs, grey trends).. Green dashed lines correspond to geometric mean (GM, 1990-", dtyr,") for recruitment (upper right), $F_{MSY}$ (lower left) and, $B_{lim}$ (lower right). Red dashed line (lower right) corresponds to $B_{pa}$.")
+```
+```{r fsumPlot, fig.cap = fig.cap.text, fig.width = 6, fig.height= 6}
+include_graphics(file.path("report","wg_report",paste0('summaryPlot', run, '.png')))
+```
+
+<!-- ```{r fageConCadv, fig.cap = fig.cap.text'Hake (*Merluccius merluccius*) in subareas 4, 6, and 7, and in divisions 3.a, 8.a–b, and 8.d, Northern stock. Contribution of age classes to catch advice in `r fy` using $F_{advice} = F_{MSY}$ in the scenario where the estimated recruitment is used in the whole time series (top) and in the scenario where the recruitment is replaced by the geometric mean in the last two years (bottom). The blue part of the bar corresponds with landings and red one with discards.} ', fig.width = 6, fig.height= 6} -->
+<!-- include_graphics(file.path("report","wg_report",paste0('ageClass_Contribution', run, '.png'))) -->
+<!-- ``` -->
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Short term projections for yield and SSB. Vertical lines correspond to $F_{MSY}$ (red) and the assumed $F_{status quo}$ (blue). Red horizontal lines to $B_{lim}$ and $B_{pa}$.")
+```
+```{r  fstf, fig.cap = fig.cap.text, fig.width = 6, fig.height= 6}
+include_graphics(file.path("model","sum_report",'ShortTermProj.png'))
+```
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Summary plot of stock trends in the short-term forecast in the two latest assessments. Green lines correspond to current year assessment (solid line) and short-term forecast (dashed line) and red lines correspond to previous year ones (ICES, 2024).")
+```
+
+```{r fstfComp, fig.cap = fig.cap.text, fig.width = 6, fig.height= 6}
+include_graphics(file.path("report","STF",'STF_summaryPlot.png'))
+```
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Selectivity-at-length (Lsel) and retention (Ret) for the modelled fleets estimated by the current year’s assessment model (dashed line) compared to last year one (solid line; ICES, 2024).")
+```
+```{r fstfSelRet, fig.cap = fig.cap.text, fig.width = 6, fig.height= 6}
+include_graphics(file.path("report","STF",'STF_select_retent.png'))
+```
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Short-term forecast showing the numbers-at-age in the catches (cage), in the population (nage) and selectivity-at-age estimated for this year (green lines) compared to those estimated in the year before ", dtyr," (red lines; ICES, 2024).")
+# fig.cap.text <- paste0(cap.main, " Left panel: Short-term forecast showing the numbers-at-age in the catches (cage), in the population (nage) and selectivity-at-age estimated for this year (green lines) compared to those estimated in the year before ", dtyr," (red lines; ICES, 2024). Right panel: relative values WGBIE",dtyr+1,"/WGBIE",dtyr," assessments.")
+```
+```{r fstfNage, fig.cap = fig.cap.text, fig.width = 6, fig.height= 6}
+include_graphics(file.path("report","STF",'STF_ages.png'))
+# include_graphics(file.path("report","STF",'STF_ages_rel.png'))
+```
+
+```{r}
+fig.cap.text <- paste0(cap.main, " Yield per recruit analysis. Vertical lines correspond to $F_{0.1}$, $F_{35\\%}$, $F_{30\\%}$, $F_{sq}$ and $F_{max}$.")
+```
+```{r  fypr, fig.cap = fig.cap.text, fig.width = 6, fig.height= 6}
+include_graphics(file.path("report","wg_report",'YPREquilibrium.png'))
+```
+
+<!-- ```{r fretroPeels_oldM, fig.cap = fig.cap.text'Hake (*Merluccius merluccius*) in subareas 4, 6, and 7, and in divisions 3.a, 8.a–b, and 8.d, Northern stock. Differences between the time series in the retrospective analysis plot from the `dtyr` SS assessment model for `r ndy-5`-`r dy` using the old model configuration (ICES, 2021).  The values in the bottom-left of the plot corresponds to the Mohn’s rho estimates in `r dy`.', fig.width = 6, fig.height= 7} -->
+<!-- include_graphics(file.path("report","wg_report",paste0('retroPeels_oldModel.png'))) -->
+<!-- ``` -->
+
